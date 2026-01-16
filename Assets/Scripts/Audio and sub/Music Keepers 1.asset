@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67ac5dd96aca95141a467a4ab1f76fb8, type: 3}
+  m_Name: Music Keepers 1
+  m_EditorClassIdentifier: 
+  title: 
+  clip: {fileID: 8300000, guid: 48e371ccc45c4594b9c8d38e01c6df43, type: 3}
+  subtitles:
+  - time: 1
+    text: Keep The Door
+  - time: 5
+    text: 
