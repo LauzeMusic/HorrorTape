@@ -21,10 +21,15 @@ public class Door : MonoBehaviour, IInteractable
 
     bool isMoving = false;
 
+    // 🔊 REFERENCIA AL AUDIO
+    DoorAudio doorAudio;
+
     void Awake()
     {
-        // Guardamos la rotación cerrada real del pivot
         closedRotation = transform.localRotation;
+
+        // 🔊 buscamos el DoorAudio en el mismo objeto
+        doorAudio = GetComponent<DoorAudio>();
     }
 
     void Update()
@@ -61,7 +66,6 @@ public class Door : MonoBehaviour, IInteractable
     {
         Vector3 toPlayer = (player.position - transform.position).normalized;
 
-        // Determina desde qué lado está el jugador
         float side = Vector3.Dot(transform.right, toPlayer);
         float direction = side >= 0 ? 1f : -1f;
 
@@ -71,11 +75,19 @@ public class Door : MonoBehaviour, IInteractable
 
         currentState = DoorState.Open;
         isMoving = true;
+
+        // 🔊 SONIDO DE ABRIR
+        if (doorAudio != null)
+            doorAudio.PlayOpen();
     }
 
     void Close()
     {
         currentState = DoorState.Closed;
         isMoving = true;
+
+        // 🔊 SONIDO DE CERRAR
+        if (doorAudio != null)
+            doorAudio.PlayClose();
     }
 }
