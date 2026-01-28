@@ -11,13 +11,12 @@ public class DoorAudio : MonoBehaviour
 
     [Header("Randomization")]
     public Vector2 pitchRange = new Vector2(0.9f, 1.1f);
-    public Vector2 volumeRange = new Vector2(0.9f, 1.0f);
 
     public void PlayOpen()
     {
         if (openClip == null) return;
 
-        ApplyRandom();
+        ApplyRandomPitch();
         audioSource.PlayOneShot(openClip);
     }
 
@@ -25,13 +24,12 @@ public class DoorAudio : MonoBehaviour
     {
         if (closeClip == null) return;
 
-        ApplyRandom();
+        ApplyRandomPitch();
         audioSource.PlayOneShot(closeClip);
     }
 
-    void ApplyRandom()
+    void ApplyRandomPitch()
     {
         audioSource.pitch = Random.Range(pitchRange.x, pitchRange.y);
-        audioSource.volume = Random.Range(volumeRange.x, volumeRange.y);
     }
 }
