@@ -1,11 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal; // ← ESTA ES LA CLAVee
+using UnityEngine.Rendering.PostProcessing;
+
+
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("Interaction Blocker")]
+    public GameObject cassetteBlocker;
+    
     [Header("Movement")]
     public float walkSpeed = 2f;
     public float runSpeed = 4f;
@@ -16,9 +20,12 @@ public class PlayerController : MonoBehaviour
     public ChairAmbientAudio chairAmbient;
     public CassetteAnimatorController cassetteAnimator;
 
-    [Header("Run Post Process")]
-    public Volume runVolume;           // Volume global con el efecto de correr
-    public float runBlendSpeed = 6f;   // Velocidad de entrada/salida del efecto
+    [Header("Run Visual Effect (PostProcess OLD)")]
+    public PostProcessVolume postProcessVolume;
+    public float runBlendSpeed = 6f;
+
+    public float normalFOV = 60f;
+    public float runFOV = 72f;
 
     // =======================
     // PLAYER STATE
@@ -26,25 +33,29 @@ public class PlayerController : MonoBehaviour
 
     public enum PlayerState
     {
-        Free,       // Movimiento libre
-        Cassette    // Modo silla / casetera
+        Free,
+        Cassette
     }
 
     public PlayerState currentState = PlayerState.Free;
 
     // =======================
-    // INTERNAL REFERENCES
+    // INTERNAL
     // =======================
 
     CharacterController controller;
-    Transform cam;
+    Camera cam;
 
     float xRot = 0f;
     Vector3 velocity;
 
     Transform cassetteExitPoint;
 
-    float targetRunWeight = 0f; // Peso objetivo del postprocess al correr
+    // PostProcess refs
+    Vignette vignette;
+    MotionBlur motionBlur;
+
+    float runWeight = 0f;
 
     // =======================
     // INIT
@@ -53,14 +64,17 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        cam = Camera.main.transform;
+        cam = Camera.main;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // Seguridad: arrancar sin postprocess activo
-        if (runVolume != null)
-            runVolume.weight = 0f;
+        // Cachear efectos
+        if (postProcessVolume != null)
+        {
+            postProcessVolume.profile.TryGetSettings(out vignette);
+            postProcessVolume.profile.TryGetSettings(out motionBlur);
+        }
     }
 
     // =======================
@@ -77,7 +91,7 @@ public class PlayerController : MonoBehaviour
         if (currentState == PlayerState.Cassette && Input.GetKeyDown(KeyCode.Space))
             ExitCassetteMode();
 
-        HandleRunPostProcess();
+        HandleRunEffects();
     }
 
     // =======================
@@ -103,7 +117,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // =======================
-    // CAMERA LOOK
+    // LOOK
     // =======================
 
     void HandleLook()
@@ -113,39 +127,39 @@ public class PlayerController : MonoBehaviour
 
         xRot -= mouseY;
 
-        // Más limitado cuando estás sentado
         if (currentState == PlayerState.Cassette)
             xRot = Mathf.Clamp(xRot, -35f, 35f);
         else
             xRot = Mathf.Clamp(xRot, -70f, 70f);
 
-        cam.localRotation = Quaternion.Euler(xRot, 0f, 0f);
+        cam.transform.localRotation = Quaternion.Euler(xRot, 0f, 0f);
         transform.Rotate(Vector3.up * mouseX);
     }
 
     // =======================
-    // RUN POST PROCESS
+    // RUN EFFECTS
     // =======================
 
-    void HandleRunPostProcess()
+    void HandleRunEffects()
     {
-        if (runVolume == null) return;
-
-        // Solo se activa si:
-        // - Estás en modo libre
-        // - Estás presionando Shift
         bool running =
             currentState == PlayerState.Free &&
             Input.GetKey(KeyCode.LeftShift);
 
-        targetRunWeight = running ? 1f : 0f;
+        float target = running ? 1f : 0f;
 
-        // Suavizado para que no sea brusco
-        runVolume.weight = Mathf.Lerp(
-            runVolume.weight,
-            targetRunWeight,
-            Time.deltaTime * runBlendSpeed
-        );
+        runWeight = Mathf.Lerp(runWeight, target, Time.deltaTime * runBlendSpeed);
+
+        // FOV dinámico
+        cam.fieldOfView = Mathf.Lerp(normalFOV, runFOV, runWeight);
+
+        // Vignette (ojo de gato)
+        if (vignette != null)
+            vignette.intensity.value = Mathf.Lerp(0.2f, 0.45f, runWeight);
+
+        // Motion blur leve
+        if (motionBlur != null)
+            motionBlur.shutterAngle.value = Mathf.Lerp(0f, 120f, runWeight);
     }
 
     // =======================
@@ -155,9 +169,12 @@ public class PlayerController : MonoBehaviour
     public void EnterCassetteMode(Transform cassettePoint, Transform exitPoint)
     {
         currentState = PlayerState.Cassette;
-        cassetteExitPoint = exitPoint;
 
-        // Sonido ambiente de la silla
+        cassetteExitPoint = exitPoint; // ← Faltaba esta para determinar la salida
+
+        if (cassetteBlocker != null)
+            cassetteBlocker.SetActive(false);
+
         if (chairAmbient != null)
             chairAmbient.EnterChair();
 
@@ -170,6 +187,9 @@ public class PlayerController : MonoBehaviour
     public void ExitCassetteMode()
     {
         currentState = PlayerState.Free;
+
+        if (cassetteBlocker != null)
+            cassetteBlocker.SetActive(true);
 
         if (chairAmbient != null)
             chairAmbient.ExitChair();
