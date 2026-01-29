@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
-
-
 public class PlayerController : MonoBehaviour
 {
     [Header("Interaction Blocker")]
     public GameObject cassetteBlocker;
-    
+
     [Header("Movement")]
     public float walkSpeed = 2f;
     public float runSpeed = 4f;
@@ -20,10 +18,9 @@ public class PlayerController : MonoBehaviour
     public ChairAmbientAudio chairAmbient;
     public CassetteAnimatorController cassetteAnimator;
 
-    [Header("Run Visual Effect (PostProcess OLD)")]
+    [Header("Run Visual Effect")]
     public PostProcessVolume postProcessVolume;
     public float runBlendSpeed = 6f;
-
     public float normalFOV = 60f;
     public float runFOV = 72f;
 
@@ -33,11 +30,13 @@ public class PlayerController : MonoBehaviour
 
     public enum PlayerState
     {
+        Loading,
+        Cinematic,
         Free,
         Cassette
     }
 
-    public PlayerState currentState = PlayerState.Free;
+    public PlayerState currentState = PlayerState.Loading;
 
     // =======================
     // INTERNAL
@@ -51,7 +50,6 @@ public class PlayerController : MonoBehaviour
 
     Transform cassetteExitPoint;
 
-    // PostProcess refs
     Vignette vignette;
     MotionBlur motionBlur;
 
@@ -61,15 +59,17 @@ public class PlayerController : MonoBehaviour
     // INIT
     // =======================
 
-    void Start()
+    void Awake()
     {
         controller = GetComponent<CharacterController>();
         cam = Camera.main;
+    }
 
+    void Start()
+    {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // Cachear efectos
         if (postProcessVolume != null)
         {
             postProcessVolume.profile.TryGetSettings(out vignette);
@@ -83,6 +83,9 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (currentState == PlayerState.Loading)
+            return;
+
         HandleLook();
 
         if (currentState == PlayerState.Free)
@@ -92,6 +95,36 @@ public class PlayerController : MonoBehaviour
             ExitCassetteMode();
 
         HandleRunEffects();
+    }
+
+    // =====================
+    // STATE CONTROL
+    // =====================
+
+    public void EnterLoading()
+    {
+        currentState = PlayerState.Loading;
+
+        if (controller != null)
+            controller.enabled = false;
+    }
+
+    public void ExitLoading()
+    {
+        currentState = PlayerState.Cinematic;
+    }
+
+    public void EnterCinematic()
+    {
+        currentState = PlayerState.Cinematic;
+        controller.enabled = false;
+        velocity = Vector3.zero;
+    }
+
+    public void ExitCinematic()
+    {
+        controller.enabled = true;
+        currentState = PlayerState.Free;
     }
 
     // =======================
@@ -147,17 +180,13 @@ public class PlayerController : MonoBehaviour
             Input.GetKey(KeyCode.LeftShift);
 
         float target = running ? 1f : 0f;
-
         runWeight = Mathf.Lerp(runWeight, target, Time.deltaTime * runBlendSpeed);
 
-        // FOV dinámico
         cam.fieldOfView = Mathf.Lerp(normalFOV, runFOV, runWeight);
 
-        // Vignette (ojo de gato)
         if (vignette != null)
             vignette.intensity.value = Mathf.Lerp(0.2f, 0.45f, runWeight);
 
-        // Motion blur leve
         if (motionBlur != null)
             motionBlur.shutterAngle.value = Mathf.Lerp(0f, 120f, runWeight);
     }
@@ -169,8 +198,7 @@ public class PlayerController : MonoBehaviour
     public void EnterCassetteMode(Transform cassettePoint, Transform exitPoint)
     {
         currentState = PlayerState.Cassette;
-
-        cassetteExitPoint = exitPoint; // ← Faltaba esta para determinar la salida
+        cassetteExitPoint = exitPoint;
 
         if (cassetteBlocker != null)
             cassetteBlocker.SetActive(false);

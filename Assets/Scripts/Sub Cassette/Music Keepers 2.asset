@@ -16,6 +16,6 @@ MonoBehaviour:
   clip: {fileID: 8300000, guid: 91c673696204f4d4caa5705fafeca831, type: 3}
   subtitles:
   - time: 1
-    text: 'Welcome To Vyrellia '
-  - time: 5
+    text: Welcome To Vyrellia
+  - time: 6
     text: 
