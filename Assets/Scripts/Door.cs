@@ -7,7 +7,8 @@ public class Door : MonoBehaviour, IInteractable
     public enum DoorState
     {
         Closed,
-        Open
+        Open,
+        Blocked
     }
 
     [Header("Door Settings")]
@@ -27,8 +28,6 @@ public class Door : MonoBehaviour, IInteractable
     void Awake()
     {
         closedRotation = transform.localRotation;
-
-        // 🔊 buscamos el DoorAudio en el mismo objeto
         doorAudio = GetComponent<DoorAudio>();
     }
 
@@ -56,9 +55,19 @@ public class Door : MonoBehaviour, IInteractable
     {
         if (isMoving) return;
 
+        // SI ESTA BLOQUEADA
+        if (currentState == DoorState.Blocked)
+        {
+            if (doorAudio != null)
+                doorAudio.PlayBlocked();
+
+            return;
+        }
+
+        // comportamiento normal
         if (currentState == DoorState.Closed)
             Open(interactor.transform);
-        else
+        else if (currentState == DoorState.Open)
             Close();
     }
 
@@ -76,7 +85,6 @@ public class Door : MonoBehaviour, IInteractable
         currentState = DoorState.Open;
         isMoving = true;
 
-        // 🔊 SONIDO DE ABRIR
         if (doorAudio != null)
             doorAudio.PlayOpen();
     }
@@ -86,8 +94,14 @@ public class Door : MonoBehaviour, IInteractable
         currentState = DoorState.Closed;
         isMoving = true;
 
-        // 🔊 SONIDO DE CERRAR
         if (doorAudio != null)
             doorAudio.PlayClose();
+    }
+
+    // 🔑 LLAMADO DESDE LA LLAVE
+    public void UnlockDoor()
+    {
+        if (currentState == DoorState.Blocked)
+            currentState = DoorState.Closed;
     }
 }

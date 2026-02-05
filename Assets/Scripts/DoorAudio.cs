@@ -8,6 +8,7 @@ public class DoorAudio : MonoBehaviour
 
     public AudioClip openClip;
     public AudioClip closeClip;
+    public AudioClip blockedClip;
 
     [Header("Randomization")]
     public Vector2 pitchRange = new Vector2(0.9f, 1.1f);
@@ -26,6 +27,14 @@ public class DoorAudio : MonoBehaviour
 
         ApplyRandomPitch();
         audioSource.PlayOneShot(closeClip);
+    }
+
+    public void PlayBlocked()
+    {
+        if (blockedClip == null) return;
+
+        ApplyRandomPitch();
+        audioSource.PlayOneShot(blockedClip);
     }
 
     void ApplyRandomPitch()
