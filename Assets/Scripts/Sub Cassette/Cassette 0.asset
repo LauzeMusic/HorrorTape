@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Cassette 0
   m_EditorClassIdentifier: 
   title: 
-  clip: {fileID: 8300000, guid: 1a60487d6b830984d881f6a95aa0b746, type: 3}
+  clip: {fileID: 8300000, guid: 67601ca4fbf02dd4da36bddff9499c54, type: 3}
   subtitles:
   - time: 1
     text: Caso 1 Archivo de audio
