@@ -22,8 +22,8 @@ public class PlayerInteractor : MonoBehaviour
             interactDistance,
             interactableLayer))
         {
-            currentInteractable = hit.collider.GetComponent<IInteractable>();
-            HoverHighlight hover = hit.collider.GetComponent<HoverHighlight>();
+            currentInteractable = hit.collider.GetComponentInParent<IInteractable>();
+            HoverHighlight hover = hit.collider.GetComponentInParent<HoverHighlight>();
 
             if (hover != currentHover)
             {

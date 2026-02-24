@@ -22,7 +22,6 @@ public class Door : MonoBehaviour, IInteractable
 
     bool isMoving = false;
 
-    // 🔊 REFERENCIA AL AUDIO
     DoorAudio doorAudio;
 
     void Awake()
@@ -55,16 +54,13 @@ public class Door : MonoBehaviour, IInteractable
     {
         if (isMoving) return;
 
-        // SI ESTA BLOQUEADA
+        // 🔒 Si está bloqueada, no hace nada
         if (currentState == DoorState.Blocked)
         {
-            if (doorAudio != null)
-                doorAudio.PlayBlocked();
-
+            doorAudio?.PlayBlocked();
             return;
         }
 
-        // comportamiento normal
         if (currentState == DoorState.Closed)
             Open(interactor.transform);
         else if (currentState == DoorState.Open)
@@ -85,20 +81,27 @@ public class Door : MonoBehaviour, IInteractable
         currentState = DoorState.Open;
         isMoving = true;
 
-        if (doorAudio != null)
-            doorAudio.PlayOpen();
+        doorAudio?.PlayOpen();
     }
 
-    void Close()
+    public void Close()
     {
         currentState = DoorState.Closed;
         isMoving = true;
 
-        if (doorAudio != null)
-            doorAudio.PlayClose();
+        doorAudio?.PlayClose();
     }
 
-    // 🔑 LLAMADO DESDE LA LLAVE
+    // 🔐 Bloquea y cierra instantáneamente
+    public void LockDoor()
+    {
+        currentState = DoorState.Blocked;
+
+        isMoving = false;
+        transform.localRotation = closedRotation;
+    }
+
+    // 🔓 Desbloquea (queda cerrada pero usable)
     public void UnlockDoor()
     {
         if (currentState == DoorState.Blocked)
