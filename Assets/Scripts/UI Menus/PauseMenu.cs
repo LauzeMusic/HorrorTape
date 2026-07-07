@@ -74,12 +74,24 @@ public class PauseMenu : MonoBehaviour
     }
 
     // =======================
-    // VIDEO
+    // VIDEO (Actualizado)
     // =======================
 
-    public void SetFullscreen(bool fullscreen)
+    public void SetFullscreen(bool isFullscreen)
     {
-        Screen.fullScreen = fullscreen;
+        if (isFullscreen)
+        {
+            Resolution currentRes = Screen.currentResolution;
+            Screen.SetResolution(currentRes.width, currentRes.height, FullScreenMode.FullScreenWindow);
+        }
+        else
+        {
+            Resolution currentRes = Screen.currentResolution;
+            Screen.SetResolution(currentRes.width, currentRes.height, FullScreenMode.Windowed);
+        }
+
+        Screen.fullScreen = isFullscreen;
+        Debug.Log("In-Game Fullscreen: " + isFullscreen);
     }
 
     // =======================
@@ -88,7 +100,11 @@ public class PauseMenu : MonoBehaviour
 
     public void BackToMainMenu()
     {
+        // IMPORTANTE: Aseguramos que el tiempo vuelva a la normalidad 
+        // y el cursor sea visible antes de cambiar de escena
         Time.timeScale = 1f;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
         SceneManager.LoadScene("MainMenu");
     }
 

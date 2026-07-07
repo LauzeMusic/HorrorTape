@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(AudioSource))]
 public class InteractSFX : MonoBehaviour
 {
     public AudioClip clipA;
@@ -10,15 +9,6 @@ public class InteractSFX : MonoBehaviour
 
     [Range(0f, 1f)]
     public float volume = 1f;
-
-    AudioSource source;
-
-    void Awake()
-    {
-        source = GetComponent<AudioSource>();
-        source.playOnAwake = false;
-        source.spatialBlend = 1f; // 3D
-    }
 
     public void Play()
     {
@@ -30,6 +20,10 @@ public class InteractSFX : MonoBehaviour
         }
 
         if (clipToPlay != null)
-            source.PlayOneShot(clipToPlay, volume);
+        {
+            // Usamos PlayClipAtPoint para que el sonido no dependa de este GameObject
+            // transform.position asegura que el sonido siga siendo 3D en el lugar correcto
+            AudioSource.PlayClipAtPoint(clipToPlay, transform.position, volume);
+        }
     }
 }
